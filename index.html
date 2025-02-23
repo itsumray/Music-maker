@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Music Maker</title>
+    <title>Interactive Piano</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <style>
         body {
@@ -12,72 +12,68 @@
             background: black;
             color: white;
         }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(8, 50px);
-            gap: 5px;
+        .piano {
+            display: flex;
             justify-content: center;
             margin-top: 20px;
         }
-        .cell {
+        .key {
             width: 50px;
-            height: 50px;
-            background: gray;
+            height: 200px;
             border: 1px solid white;
             cursor: pointer;
+            display: inline-block;
+            user-select: none;
+        }
+        .white {
+            background: white;
+            color: black;
+        }
+        .black {
+            background: black;
+            height: 120px;
+            width: 30px;
+            margin-left: -15px;
+            margin-right: -15px;
+            z-index: 2;
+            position: relative;
         }
         .active {
-            background: cyan;
+            background: cyan !important;
         }
     </style>
 </head>
 <body>
-    <h1>Interactive Music Maker</h1>
+    <h1>Interactive Piano</h1>
     <button onclick="startSequence()">Start</button>
     <button onclick="stopSequence()">Stop</button>
-    <div class="grid" id="grid"></div>
+    <div class="piano" id="piano"></div>
 
     <script>
-        const grid = document.getElementById("grid");
-        const rows = 10;
-        const cols = 8;
-        const cells = [];
-        const sounds = [
-            "C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5", "D5", "E5"
+        const piano = document.getElementById("piano");
+        const notes = [
+            { note: "C4", type: "white" }, { note: "C#4", type: "black" },
+            { note: "D4", type: "white" }, { note: "D#4", type: "black" },
+            { note: "E4", type: "white" },
+            { note: "F4", type: "white" }, { note: "F#4", type: "black" },
+            { note: "G4", type: "white" }, { note: "G#4", type: "black" },
+            { note: "A4", type: "white" }, { note: "A#4", type: "black" },
+            { note: "B4", type: "white" }, { note: "C5", type: "white" }
         ];
-        const synths = sounds.map(() => new Tone.Synth().toDestination());
-        let loop;
-
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < cols; j++) {
-                let cell = document.createElement("div");
-                cell.classList.add("cell");
-                cell.dataset.row = i;
-                cell.dataset.col = j;
-                cell.onclick = () => cell.classList.toggle("active");
-                grid.appendChild(cell);
-                cells.push(cell);
-            }
-        }
-
-        function startSequence() {
-            let index = 0;
-            loop = new Tone.Loop(time => {
-                for (let i = 0; i < rows; i++) {
-                    let cell = cells[i * cols + index];
-                    if (cell.classList.contains("active")) {
-                        synths[i].triggerAttackRelease(sounds[i], "8n", time);
-                    }
-                }
-                index = (index + 1) % cols;
-            }, "8n").start(0);
-            Tone.Transport.start();
-        }
-
-        function stopSequence() {
-            Tone.Transport.stop();
-            loop.cancel();
-        }
+        
+        const synth = new Tone.Synth().toDestination();
+        
+        notes.forEach((key, index) => {
+            let keyElement = document.createElement("div");
+            keyElement.classList.add("key", key.type);
+            keyElement.dataset.note = key.note;
+            keyElement.onclick = () => {
+                synth.triggerAttackRelease(key.note, "8n");
+                keyElement.classList.add("active");
+                setTimeout(() => keyElement.classList.remove("active"), 200);
+            };
+            piano.appendChild(keyElement);
+        });
     </script>
 </body>
 </html>
