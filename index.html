@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Music Maker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            gap: 5px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            background: lightgray;
+            border: 1px solid black;
+            cursor: pointer;
+        }
+        .active {
+            background: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Music Maker</h1>
+    <button onclick="startSequence()">Start</button>
+    <button onclick="stopSequence()">Stop</button>
+    <div class="grid" id="grid"></div>
+
+    <script>
+        const grid = document.getElementById("grid");
+        const rows = 4;
+        const cols = 8;
+        const cells = [];
+        const synth = new Tone.Synth().toDestination();
+        let loop;
+
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < cols; j++) {
+                let cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.dataset.row = i;
+                cell.dataset.col = j;
+                cell.onclick = () => cell.classList.toggle("active");
+                grid.appendChild(cell);
+                cells.push(cell);
+            }
+        }
+
+        function startSequence() {
+            let index = 0;
+            loop = new Tone.Loop(time => {
+                for (let i = 0; i < rows; i++) {
+                    let cell = cells[i * cols + index];
+                    if (cell.classList.contains("active")) {
+                        synth.triggerAttackRelease("C4", "8n", time);
+                    }
+                }
+                index = (index + 1) % cols;
+            }, "8n").start(0);
+            Tone.Transport.start();
+        }
+
+        function stopSequence() {
+            Tone.Transport.stop();
+            loop.cancel();
+        }
+    </script>
+</body>
+</html>
