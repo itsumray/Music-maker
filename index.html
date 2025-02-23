@@ -9,6 +9,8 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
+            background: black;
+            color: white;
         }
         .grid {
             display: grid;
@@ -20,12 +22,12 @@
         .cell {
             width: 50px;
             height: 50px;
-            background: lightgray;
-            border: 1px solid black;
+            background: gray;
+            border: 1px solid white;
             cursor: pointer;
         }
         .active {
-            background: blue;
+            background: cyan;
         }
     </style>
 </head>
@@ -37,10 +39,13 @@
 
     <script>
         const grid = document.getElementById("grid");
-        const rows = 4;
+        const rows = 10;
         const cols = 8;
         const cells = [];
-        const synth = new Tone.Synth().toDestination();
+        const sounds = [
+            "C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5", "D5", "E5"
+        ];
+        const synths = sounds.map(() => new Tone.Synth().toDestination());
         let loop;
 
         for (let i = 0; i < rows; i++) {
@@ -61,7 +66,7 @@
                 for (let i = 0; i < rows; i++) {
                     let cell = cells[i * cols + index];
                     if (cell.classList.contains("active")) {
-                        synth.triggerAttackRelease("C4", "8n", time);
+                        synths[i].triggerAttackRelease(sounds[i], "8n", time);
                     }
                 }
                 index = (index + 1) % cols;
