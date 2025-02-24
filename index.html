@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Piano</title>
+    <title>Music Sequencer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <style>
         body {
@@ -12,68 +12,101 @@
             background: black;
             color: white;
         }
-        .piano {
-            display: flex;
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(16, 40px);
+            gap: 5px;
             justify-content: center;
             margin-top: 20px;
         }
-        .key {
-            width: 50px;
-            height: 200px;
+        .cell {
+            width: 40px;
+            height: 40px;
+            background: gray;
             border: 1px solid white;
             cursor: pointer;
-            display: inline-block;
-            user-select: none;
-        }
-        .white {
-            background: white;
-            color: black;
-        }
-        .black {
-            background: black;
-            height: 120px;
-            width: 30px;
-            margin-left: -15px;
-            margin-right: -15px;
-            z-index: 2;
-            position: relative;
         }
         .active {
-            background: cyan !important;
+            background: cyan;
+        }
+        .row-label {
+            display: flex;
+            align-items: center;
+            justify-content: right;
+            width: 120px;
+            padding-right: 10px;
+            font-weight: bold;
+        }
+        .row {
+            display: flex;
+            align-items: center;
         }
     </style>
 </head>
 <body>
-    <h1>Interactive Piano</h1>
+    <h1>Music Sequencer</h1>
     <button onclick="startSequence()">Start</button>
     <button onclick="stopSequence()">Stop</button>
-    <div class="piano" id="piano"></div>
+    <div id="sequencer"></div>
 
     <script>
-        const piano = document.getElementById("piano");
-        const notes = [
-            { note: "C4", type: "white" }, { note: "C#4", type: "black" },
-            { note: "D4", type: "white" }, { note: "D#4", type: "black" },
-            { note: "E4", type: "white" },
-            { note: "F4", type: "white" }, { note: "F#4", type: "black" },
-            { note: "G4", type: "white" }, { note: "G#4", type: "black" },
-            { note: "A4", type: "white" }, { note: "A#4", type: "black" },
-            { note: "B4", type: "white" }, { note: "C5", type: "white" }
+        const sequencer = document.getElementById("sequencer");
+        const rows = [
+            { name: "Kick", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/kick.mp3").toDestination() },
+            { name: "Snare", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/snare.mp3").toDestination() },
+            { name: "Hi-Hat", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/hihat.mp3").toDestination() },
+            { name: "Clap", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/clap.mp3").toDestination() },
+            { name: "Tom", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/tom.mp3").toDestination() },
+            { name: "Synth", sound: new Tone.Synth().toDestination() }
         ];
         
-        const synth = new Tone.Synth().toDestination();
-        
-        notes.forEach((key, index) => {
-            let keyElement = document.createElement("div");
-            keyElement.classList.add("key", key.type);
-            keyElement.dataset.note = key.note;
-            keyElement.onclick = () => {
-                synth.triggerAttackRelease(key.note, "8n");
-                keyElement.classList.add("active");
-                setTimeout(() => keyElement.classList.remove("active"), 200);
-            };
-            piano.appendChild(keyElement);
+        const cols = 16;
+        const cells = [];
+        let loop;
+
+        rows.forEach((row, rowIndex) => {
+            let rowDiv = document.createElement("div");
+            rowDiv.classList.add("row");
+            
+            let label = document.createElement("div");
+            label.classList.add("row-label");
+            label.innerText = row.name;
+            rowDiv.appendChild(label);
+
+            for (let j = 0; j < cols; j++) {
+                let cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.dataset.row = rowIndex;
+                cell.dataset.col = j;
+                cell.onclick = () => cell.classList.toggle("active");
+                rowDiv.appendChild(cell);
+                cells.push(cell);
+            }
+            sequencer.appendChild(rowDiv);
         });
+
+        function startSequence() {
+            let index = 0;
+            loop = new Tone.Loop(time => {
+                rows.forEach((row, rowIndex) => {
+                    let cell = cells[rowIndex * cols + index];
+                    if (cell.classList.contains("active")) {
+                        if (row.sound instanceof Tone.Player) {
+                            row.sound.start(time);
+                        } else {
+                            row.sound.triggerAttackRelease("C4", "8n", time);
+                        }
+                    }
+                });
+                index = (index + 1) % cols;
+            }, "8n").start(0);
+            Tone.Transport.start();
+        }
+
+        function stopSequence() {
+            Tone.Transport.stop();
+            loop.cancel();
+        }
     </script>
 </body>
 </html>
