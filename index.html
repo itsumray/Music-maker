@@ -57,7 +57,9 @@
             { name: "Hi-Hat", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/hihat.mp3").toDestination() },
             { name: "Clap", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/clap.mp3").toDestination() },
             { name: "Tom", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/tom.mp3").toDestination() },
-            { name: "Synth", sound: new Tone.Synth().toDestination() }
+            { name: "Synth", sound: new Tone.Synth().toDestination() },
+            { name: "Bass", sound: new Tone.MembraneSynth().toDestination() },
+            { name: "Cymbal", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/cymbal.mp3").toDestination() }
         ];
         
         const cols = 16;
@@ -94,7 +96,7 @@
                         if (row.sound instanceof Tone.Player) {
                             row.sound.start(time);
                         } else {
-                            row.sound.triggerAttackRelease("C4", "8n", time);
+                            row.sound.triggerAttackRelease("C2", "8n", time);
                         }
                     }
                 });
