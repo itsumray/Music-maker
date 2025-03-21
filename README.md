@@ -1,2 +1,3 @@
 # Music-maker
-simple, interactive music sequencer
+simple, interactive beat maker
+https://itsumray.github.io/Music-maker/
