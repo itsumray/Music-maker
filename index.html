@@ -3,112 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Sequencer</title>
+    <title>Keyboard Drum Pad</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
             background: black;
             color: white;
+            text-align: center;
+            padding: 20px;
         }
+
         .grid {
             display: grid;
-            grid-template-columns: repeat(16, 40px);
-            gap: 5px;
+            grid-template-columns: repeat(4, 80px);
+            gap: 10px;
             justify-content: center;
             margin-top: 20px;
         }
-        .cell {
-            width: 40px;
-            height: 40px;
+
+        .pad {
+            width: 80px;
+            height: 80px;
             background: gray;
             border: 1px solid white;
             cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
         }
+
         .active {
-            background: cyan;
+            background-color: orange;
         }
-        .row-label {
-            display: flex;
-            align-items: center;
-            justify-content: right;
-            width: 120px;
-            padding-right: 10px;
-            font-weight: bold;
+
+        .pad:hover {
+            background-color: #666;
         }
-        .row {
-            display: flex;
-            align-items: center;
+
+        button {
+            background-color: orange;
+            border: none;
+            padding: 12px 20px;
+            color: white;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 30px;
+        }
+
+        button:hover {
+            background-color: #e67e22;
         }
     </style>
 </head>
 <body>
-    <h1>Music Sequencer</h1>
-    <button onclick="startSequence()">Start</button>
-    <button onclick="stopSequence()">Stop</button>
-    <div id="sequencer"></div>
+    <h1>Keyboard Drum Pad</h1>
+    <p>Press a key or click a pad to play a sound!</p>
+    <div id="padContainer" class="grid"></div>
+    <button id="resetKeys">Reset Key Bindings</button>
 
     <script>
-        const sequencer = document.getElementById("sequencer");
-        const rows = [
-            { name: "Kick", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/kick.mp3").toDestination() },
-            { name: "Snare", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/snare.mp3").toDestination() },
-            { name: "Hi-Hat", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/hihat.mp3").toDestination() },
-            { name: "Clap", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/clap.mp3").toDestination() },
-            { name: "Tom", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/tom.mp3").toDestination() },
-            { name: "Synth", sound: new Tone.Synth().toDestination() },
-            { name: "Bass", sound: new Tone.MembraneSynth().toDestination() },
-            { name: "Cymbal", sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/cymbal.mp3").toDestination() }
+        // Define the pads with external drum samples from Tone.js
+        const pads = [
+            { name: 'Kick', sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/kick.mp3").toDestination() },
+            { name: 'Snare', sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/snare.mp3").toDestination() },
+            { name: 'Hi-Hat', sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/hihat.mp3").toDestination() },
+            { name: 'Clap', sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/clap.mp3").toDestination() },
+            { name: 'Tom 1', sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/tom.mp3").toDestination() },
+            { name: 'Synth', sound: new Tone.Synth().toDestination() },
+            { name: 'Bass', sound: new Tone.MembraneSynth().toDestination() },
+            { name: 'Cymbal', sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/cymbal.mp3").toDestination() },
+            { name: 'Percussion 1', sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/perc1.mp3").toDestination() },
+            { name: 'Percussion 2', sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/perc2.mp3").toDestination() },
+            { name: 'Percussion 3', sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/perc3.mp3").toDestination() },
+            { name: 'Crash', sound: new Tone.Player("https://tonejs.github.io/audio/drum-samples/CR78/crash.mp3").toDestination() }
         ];
-        
-        const cols = 16;
-        const cells = [];
-        let loop;
 
-        rows.forEach((row, rowIndex) => {
-            let rowDiv = document.createElement("div");
-            rowDiv.classList.add("row");
-            
-            let label = document.createElement("div");
-            label.classList.add("row-label");
-            label.innerText = row.name;
-            rowDiv.appendChild(label);
+        const keyBindings = {
+            'Q': 0,  // Kick
+            'W': 1,  // Snare
+            'E': 2,  // Hi-Hat
+            'R': 3,  // Clap
+            'A': 4,  // Tom 1
+            'S': 5,  // Synth
+            'D': 6,  // Bass
+            'F': 7,  // Cymbal
+            'Z': 8,  // Percussion 1
+            'X': 9,  // Percussion 2
+            'C': 10, // Percussion 3
+            'V': 11  // Crash
+        };
 
-            for (let j = 0; j < cols; j++) {
-                let cell = document.createElement("div");
-                cell.classList.add("cell");
-                cell.dataset.row = rowIndex;
-                cell.dataset.col = j;
-                cell.onclick = () => cell.classList.toggle("active");
-                rowDiv.appendChild(cell);
-                cells.push(cell);
+        // Unlock AudioContext on user interaction (for mobile)
+        function unlockAudioContext() {
+            if (Tone.context.state !== 'running') {
+                Tone.context.resume().then(() => {
+                    console.log('Audio context is unlocked');
+                });
             }
-            sequencer.appendChild(rowDiv);
+        }
+
+        // Create the pad elements dynamically
+        const padContainer = document.getElementById('padContainer');
+        pads.forEach((pad, index) => {
+            const padElement = document.createElement('div');
+            padElement.classList.add('pad');
+            padElement.innerText = pad.name;
+            padElement.dataset.index = index;
+            padElement.onclick = () => playSound(index);
+            padContainer.appendChild(padElement);
         });
 
-        function startSequence() {
-            let index = 0;
-            loop = new Tone.Loop(time => {
-                rows.forEach((row, rowIndex) => {
-                    let cell = cells[rowIndex * cols + index];
-                    if (cell.classList.contains("active")) {
-                        if (row.sound instanceof Tone.Player) {
-                            row.sound.start(time);
-                        } else {
-                            row.sound.triggerAttackRelease("C2", "8n", time);
-                        }
-                    }
-                });
-                index = (index + 1) % cols;
-            }, "8n").start(0);
-            Tone.Transport.start();
+        // Function to play sound
+        function playSound(index) {
+            const pad = pads[index];
+            pad.sound.start();
+
+            // Add visual feedback when the pad is clicked
+            const padElement = document.querySelector(`.pad[data-index='${index}']`);
+            padElement.classList.add("active");
+            setTimeout(() => {
+                padElement.classList.remove("active");
+            }, 100);
         }
 
-        function stopSequence() {
-            Tone.Transport.stop();
-            loop.cancel();
-        }
+        // Set up keypresses to trigger sounds based on key bindings
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toUpperCase();
+            if (keyBindings[key] !== undefined) {
+                playSound(keyBindings[key]);
+            }
+        });
+
+        // Reset key bindings (reload the page)
+        const resetButton = document.getElementById('resetKeys');
+        resetButton.addEventListener('click', () => {
+            location.reload();
+        });
+
+        // Unlock audio context on user interaction
+        document.body.addEventListener('click', unlockAudioContext);
     </script>
 </body>
 </html>
