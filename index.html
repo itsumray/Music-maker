@@ -57,13 +57,35 @@
         button:hover {
             background-color: #e67e22;
         }
+
+        .keybind-container {
+            margin-top: 20px;
+            color: white;
+        }
+
+        .keybind {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .keybind input {
+            margin-left: 10px;
+            width: 40px;
+            height: 30px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <h1>Keyboard Drum Pad</h1>
     <p>Press a key or click a pad to play a sound!</p>
     <div id="padContainer" class="grid"></div>
-    <button id="resetKeys">Reset Key Bindings</button>
+    <div class="keybind-container">
+        <h3>Customize Key Bindings</h3>
+        <div id="keybinds"></div>
+        <button id="resetKeys">Reset Key Bindings</button>
+    </div>
 
     <script>
         // Define the pads with external drum samples from Tone.js
@@ -136,6 +158,30 @@
             if (keyBindings[key] !== undefined) {
                 playSound(keyBindings[key]);
             }
+        });
+
+        // Dynamically create the keybind inputs
+        const keybindContainer = document.getElementById('keybinds');
+        pads.forEach((pad, index) => {
+            const keybindDiv = document.createElement('div');
+            keybindDiv.classList.add('keybind');
+            keybindDiv.innerHTML = `<span>${pad.name}:</span>
+            <input type="text" id="key-${index}" value="${Object.keys(keyBindings).find(key => keyBindings[key] === index)}" maxlength="1">`;
+
+            const input = keybindDiv.querySelector('input');
+            input.addEventListener('change', (event) => {
+                const newKey = event.target.value.toUpperCase();
+                if (!Object.keys(keyBindings).includes(newKey)) {
+                    keyBindings[newKey] = index;
+                    Object.keys(keyBindings).forEach(key => {
+                        if (keyBindings[key] === index && key !== newKey) {
+                            delete keyBindings[key];
+                        }
+                    });
+                }
+            });
+
+            keybindContainer.appendChild(keybindDiv);
         });
 
         // Reset key bindings (reload the page)
